@@ -2,7 +2,7 @@ let express = require('express');
 let app = express();
 
 // Webサーバーを起動
-let server = app.listen(process.env.PORT || 3000, listen);
+let server = app.listen(process.env.PORT || 3000);
 
 // サーバーが起動したときに呼び出される
 var listen = () => {
@@ -20,14 +20,14 @@ let io = require('socket.io')(server, {
 
 // クライアントに接続されたときの処理を行う
 io.sockets.on('connection',
-  (socket) => {
+  (socket: any) => {
 
     console.log('socket.id: ' + socket.id);
 
     //クライアント側のstrokeイベントを受け取る
     socket.on('stroke',
 
-      (strokes, color) => {
+      (strokes: any, color: any) => {
         console.log(`Stroke length: ${strokes.length}`)
         if (strokes.length > 0) {
           console.log('stroke.pointerId:', strokes[0])
