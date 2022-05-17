@@ -1,3 +1,6 @@
+import { BrushParameters } from "./core/painting/brush-parameters";
+import { NativePointerEvent } from "./core/painting/NativePointerEvent";
+
 let express = require('express');
 let app = express();
 
@@ -24,17 +27,18 @@ io.sockets.on('connection',
 
     console.log('socket.id: ' + socket.id);
 
-    //クライアント側のstrokeイベントを受け取る
+    //クライアントから受信したstrokeイベントを処理する
     socket.on('stroke',
 
-      (strokes: any, color: any) => {
-        console.log(`Stroke length: ${strokes.length}`)
-        if (strokes.length > 0) {
-          console.log('stroke.pointerId:', strokes[0])
+      (points: NativePointerEvent[], brushParams: BrushParameters) => {
+        console.log(`points length: ${points.length}`)
+        if (points.length > 0) {
+          console.log('point.pointerId:', points[0])
         }
+        console.log('brushParams', brushParams);
 
-        //ブロードキャストで全員に向けて送信する
-        socket.broadcast.emit('stroke', strokes, color);
+        //ブロードキャストでクライアント全員に向けて送信する(サーバーを除く)
+        socket.broadcast.emit('stroke', points, brushParams);
       }
     );
 

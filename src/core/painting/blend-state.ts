@@ -1,0 +1,15 @@
+export enum BlendState {
+  zero,
+  one,
+  destinationColor,
+  inverseDestinationColor,
+  destinationAlpha,
+  inverseDestinationAlpha,
+  souceColor,
+  inverseSourceColor,
+  souceAlpha,
+  inverseSourceAlpha,
+  sourceAlphaSaturation,
+  blendFactor,
+  inverseBlendFactor,
+}
