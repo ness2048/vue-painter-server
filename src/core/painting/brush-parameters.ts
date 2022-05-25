@@ -1,5 +1,8 @@
 import { BlendState } from "./blend-state";
-import { BrushSizeParameters, BrushSizeParametersImplements } from "./brush-size-parameters";
+import {
+  BrushSizeParameters,
+  BrushSizeParametersImplements,
+} from "./brush-size-parameters";
 
 /**
  * ブラシのパラメーターを表します。
