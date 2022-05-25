@@ -1,46 +1,84 @@
 import { BrushParameters } from "./core/painting/brush-parameters";
 import { NativePointerEvent } from "./core/painting/NativePointerEvent";
+import express from 'express';
+import { AddressInfo } from "net";
+import { Server, Socket } from "socket.io";
 
-let express = require('express');
-let app = express();
+interface ServerToClientEvents {
+  stroke: ( data: {points: NativePointerEvent[], brushParams: BrushParameters }) => void;
+  downloadCanvas: (data: { image: Blob }) => void;
+}
+
+interface ClientToServerEvents {
+  stroke: (data: { points: NativePointerEvent[], brushParams: BrushParameters }) => void;
+  updateCanvas: (data: { image: Blob }) => void;
+  downloadCanvas: () => void;
+}
+
+interface InterServerEvents {
+  ping: () => void;
+}
+
+interface SocketData {
+  name: string;
+}
+
+const app = express();
 
 // Webサーバーを起動
-let server = app.listen(process.env.PORT || 3000);
+const server = app.listen(process.env.PORT || 3000);
 
 // サーバーが起動したときに呼び出される
-var listen = () => {
-  var host = server.address().adress;
-  var port = server.address().port;
+const listen = () => {
+  if (!server) {
+    return;
+  }
+  const address: AddressInfo = server.address() as AddressInfo;
+  const host = address.address;
+  const port = address.port;
   console.log(`http://${host}:${port}`);
 }
 
-let io = require('socket.io')(server, {
+// Socket.IO の設定
+const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server, {
   cors: {
-    origins: ['http://localhost:8080', 'http://vue-painter.s3-website-ap-northeast-1.amazonaws.com/'],
+    origin: ['http://localhost:8080'],
     methods: ['GET', 'POST']
   }
 });
 
+let canvasImage: Blob;
+
 // クライアントに接続されたときの処理を行う
 io.sockets.on('connection',
-  (socket: any) => {
-
-    console.log('socket.id: ' + socket.id);
+  (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
+    console.log(`socket.id: ${socket.id}`);
 
     //クライアントから受信したstrokeイベントを処理する
-    socket.on('stroke',
-
-      (points: NativePointerEvent[], brushParams: BrushParameters) => {
-        console.log(`points length: ${points.length}`)
-        if (points.length > 0) {
-          console.log('point.pointerId:', points[0])
+    socket.on('stroke', (data) => {
+        console.log(`points length: ${data.points.length}`)
+        if (data.points.length > 0) {
+          console.log('point.pointerId:', data.points[0])
         }
-        console.log('brushParams', brushParams);
+        console.log('brushParams', data.brushParams);
 
         //ブロードキャストでクライアント全員に向けて送信する(サーバーを除く)
-        socket.broadcast.emit('stroke', points, brushParams);
+        socket.broadcast.emit('stroke', data );
       }
     );
+
+    // キャンバスの更新
+    socket.on('updateCanvas', (data: { image: Blob }) => {
+      console.log('updateCanvas', data.image);
+      canvasImage = data.image;
+    });
+
+    // キャンバスのダウンロード
+    socket.on('downloadCanvas', () => {
+      console.log('downloadCanvas');
+      
+      socket.emit('downloadCanvas', { image: canvasImage });
+    });
 
     //コネクションが切れた時
     socket.on('disconnect', function(){
