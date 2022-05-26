@@ -9,7 +9,7 @@ interface ServerToClientEvents {
     points: NativePointerEvent[];
     brushParams: BrushParameters;
   }) => void;
-  downloadCanvas: (data: { image: Blob }) => void;
+  downloadCanvas: (data: { image: ArrayBuffer }) => void;
 }
 
 interface ClientToServerEvents {
@@ -17,7 +17,7 @@ interface ClientToServerEvents {
     points: NativePointerEvent[];
     brushParams: BrushParameters;
   }) => void;
-  updateCanvas: (data: { image: Blob }) => void;
+  updateCanvas: (data: { image: ArrayBuffer }) => void;
   downloadCanvas: () => void;
 }
 
@@ -53,12 +53,15 @@ const io = new Server<
   SocketData
 >(server, {
   cors: {
-    origin: ["http://localhost:8080"],
+    origin: [
+      "http://vue-painter.s3-website-ap-northeast-1.amazonaws.com",
+      "http://localhost:8080",
+    ],
     methods: ["GET", "POST"],
   },
 });
 
-let canvasImage: Blob;
+let canvasImage: ArrayBuffer;
 
 // クライアントに接続されたときの処理を行う
 io.sockets.on(
@@ -76,18 +79,14 @@ io.sockets.on(
     //クライアントから受信したstrokeイベントを処理する
     socket.on("stroke", (data) => {
       console.log(`points length: ${data.points.length}`);
-      if (data.points.length > 0) {
-        console.log("point.pointerId:", data.points[0]);
-      }
-      console.log("brushParams", data.brushParams);
 
       //ブロードキャストでクライアント全員に向けて送信する(サーバーを除く)
       socket.broadcast.emit("stroke", data);
     });
 
     // キャンバスの更新
-    socket.on("updateCanvas", (data: { image: Blob }) => {
-      console.log("updateCanvas", data.image);
+    socket.on("updateCanvas", (data: { image: ArrayBuffer }) => {
+      console.log(`updateCanvastype size: ${data.image.byteLength})`);
       canvasImage = data.image;
     });
 
