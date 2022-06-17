@@ -17,11 +17,11 @@ export interface BrushSizeParameters {
   /**
    * ブラシサイズを表現するスタイル名を取得または設定します。
    */
-  expressionStyleName: string | undefined;
+  expressionStyle: string | undefined;
 }
 
 export class BrushSizeParametersImplements implements BrushSizeParameters {
   size = 10;
   minimumSizeRatio = 0.1;
-  expressionStyleName: string | undefined;
+  expressionStyle: string | undefined;
 }
